@@ -14,7 +14,6 @@ while True:
         red = data["info"].get("red", 0)
         green = data["info"].get("green", 0)
         blue = data["info"].get("blue", 0)
-        print(red + green + blue)
         has_input = (red + green + blue) > 0
 
         GPIO.output(GPIO_PIN, GPIO.HIGH if has_input else GPIO.LOW)
