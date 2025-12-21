@@ -1,7 +1,7 @@
 #include <LightDependentResistor.h>
 #include <IRLibSendBase.h>
-#include <IRLib_P01_NEC.h>
-#include <IRLib_P02_Sony.h>
+#include <IRLib_P02_Sony.h>  
+#include <IRLib_HashRaw.h>
 
 // Params
 #define ENABLE_SERIAL 1
@@ -25,13 +25,23 @@ bool home_cinema_is_on = false;
 unsigned long home_cinema_busy_until = 0;
 
 // Tv
-#define TV_KEY_POWER 0X6A68351E
+#define TV_RAW_DATA_LEN 52
+uint16_t tv_raw_data[TV_RAW_DATA_LEN] =
+{
+	3950, 3950, 500, 2000, 450, 2000, 450, 2000, 
+	500, 2000, 450, 1000, 500, 1000, 450, 2050, 
+	450, 1000, 500, 2000, 450, 1000, 500, 2000, 
+	450, 1000, 500, 1000, 500, 1000, 450, 1050, 
+	450, 1000, 500, 2000, 500, 2000, 450, 1000, 
+	450, 2050, 450, 1000, 500, 2000, 450, 1000, 
+	500, 2000, 500, 1000
+};
 #define TV_LIGHT_THRESHOLD 50
 #define TV_POWER_ON_DELAY 2000
 #define TV_POWER_OFF_DELAY 5000
 
 LightDependentResistor photocell_tv(A1, 3000, LightDependentResistor::GL5528);
-IRsendNEC sender_tv;
+IRsendRaw sender_tv;
 bool tv_is_on = false;
 unsigned long tv_busy_until = 0;
 
@@ -45,7 +55,7 @@ void setup()
   // set pin used to receive state from pi as input
   pinMode(pin_input_pi, INPUT);
 }
-
+  
 void loop() 
 {
   unsigned long time = millis();
@@ -95,7 +105,7 @@ void loop()
   // Update tv power state
   if (input_is_on != tv_is_on && !code_sent && tv_busy_until < time)
   {
-    sender_tv.send(TV_KEY_POWER);
+    sender_tv.send(tv_raw_data, TV_RAW_DATA_LEN, 36);
     tv_busy_until = time + (tv_is_on ? TV_POWER_OFF_DELAY : TV_POWER_ON_DELAY);
 #ifdef ENABLE_SERIAL
     Serial.print("tv power on sent\n");
