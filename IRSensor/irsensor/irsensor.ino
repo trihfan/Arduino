@@ -1,25 +1,39 @@
 #include <LightDependentResistor.h>
 #include <IRLibSendBase.h>
+#include <IRLib_P01_NEC.h>
 #include <IRLib_P02_Sony.h>
 
-// debug
+// Params
+#define ENABLE_SERIAL 1
+#define SLEEP_TIME 1000
+
+// Input
 #define INPUT_FROM_SERIAL 1
 #define INPUT_FROM_PI 0
-#define ENABLE_SERIAL 1
 
-#define SONY_KEY_POWER 21516
-#define SONY_POWER_ON_TIME 3000
-#define SONY_POWER_ON_LIGHT_THRESHOLD 4
+const int pin_input_pi = 2; // Pin used to receive state from Pi
+bool input_is_on = false;
 
-LightDependentResistor photocell(A0, 3000, LightDependentResistor::GL5528);
+// Home cinema sony
+#define HOME_CINEMA_KEY_POWER 21516
+#define HOME_CINEMA_LIGHT_THRESHOLD 4
+#define HOME_CINEMA_POWER_DELAY 2000
 
-IRsendSony sender_sony;
+LightDependentResistor photocell_home_cinema(A0, 3000, LightDependentResistor::GL5528);
+IRsendSony sender_home_cinema;
+bool home_cinema_is_on = false;
+unsigned long home_cinema_busy_until = 0;
 
-bool sony_is_power_on = false;
-bool sony_ask_power_on = false;
+// Tv
+#define TV_KEY_POWER 0X6A68351E
+#define TV_LIGHT_THRESHOLD 50
+#define TV_POWER_ON_DELAY 2000
+#define TV_POWER_OFF_DELAY 5000
 
-// Communication with Pi
-const int pin_input_pi = 2;
+LightDependentResistor photocell_tv(A1, 3000, LightDependentResistor::GL5528);
+IRsendNEC sender_tv;
+bool tv_is_on = false;
+unsigned long tv_busy_until = 0;
 
 void setup() 
 {
@@ -28,11 +42,14 @@ void setup()
   Serial.print("IR Sensor Start\n");
 #endif
 
+  // set pin used to receive state from pi as input
   pinMode(pin_input_pi, INPUT);
 }
 
 void loop() 
 {
+  unsigned long time = millis();
+
   // 1 - Read input
 #if defined(INPUT_FROM_SERIAL) && defined(ENABLE_SERIAL)
   // Allow input from serial
@@ -41,50 +58,64 @@ void loop()
     char receivedChar = Serial.read();
     if (receivedChar == '1')
     {
-      sony_ask_power_on = true;
+      input_is_on = true;
     }
     else if (receivedChar == '0')
     {
-      sony_ask_power_on = false;
+      input_is_on = false;
     }
   }
-#endif
-
-#ifdef INPUT_FROM_PI
+#elif defined(INPUT_FROM_PI)
   // Input from pi
-  int state_from_pi = digitalRead(pin_input_pi);
-  Serial.print("state from pi: ");
-  Serial.print(state_from_pi);
-  Serial.print("\n");
-  sony_ask_power_on = state_from_pi > 0;
+  input_is_on = digitalRead(pin_input_pi) > 0;
 #endif
 
-  // 2 - Handle sony
-  // Get Sony power state with photocell
-  float light_intensity = photocell.getCurrentLux();
-  sony_is_power_on = light_intensity > SONY_POWER_ON_LIGHT_THRESHOLD;
-
+  // 2 - Handle home cinema
+  // Get home cinema power state with photocell
+  float light_intensity_home_cinema = photocell_home_cinema.getCurrentLux();
+  home_cinema_is_on = light_intensity_home_cinema > HOME_CINEMA_LIGHT_THRESHOLD;
+  bool code_sent = false;
+  
   // Update sony power state
-  if (sony_ask_power_on != sony_is_power_on)
+  if (input_is_on != home_cinema_is_on && home_cinema_busy_until < time)
   {
-    sender_sony.send(SONY_KEY_POWER, 15);
+    sender_home_cinema.send(HOME_CINEMA_KEY_POWER, 15);
+    home_cinema_busy_until = time + HOME_CINEMA_POWER_DELAY;
+    code_sent = true;
 #ifdef ENABLE_SERIAL
-    Serial.print("sony power on sent\n");
+    Serial.print("home cinema power on sent\n");
 #endif
   }
 
   // 3 - Handle tv
+  // Get Sony power state with photocell
+  float light_intensity_tv = photocell_tv.getCurrentLux();
+  tv_is_on = light_intensity_tv > TV_LIGHT_THRESHOLD;
+
+  // Update tv power state
+  if (input_is_on != tv_is_on && !code_sent && tv_busy_until < time)
+  {
+    sender_tv.send(TV_KEY_POWER);
+    tv_busy_until = time + (tv_is_on ? TV_POWER_OFF_DELAY : TV_POWER_ON_DELAY);
+#ifdef ENABLE_SERIAL
+    Serial.print("tv power on sent\n");
+#endif
+  }
 
   // 4 - Sleep
 #ifdef ENABLE_SERIAL
   // Output state
-  Serial.print("sony wanted: ");
-  Serial.print(sony_ask_power_on);
-  Serial.print(", current: ");
-  Serial.print(sony_is_power_on);
+  Serial.print("input: ");
+  Serial.print(input_is_on ? "on" : "off");
+  Serial.print(", home cinema: ");
+  Serial.print(home_cinema_is_on ? "on" : "off");
   Serial.print(", sensor: ");
-  Serial.print(light_intensity);
+  Serial.print(light_intensity_home_cinema);
+  Serial.print(", tv: ");
+  Serial.print(tv_is_on ? "on" : "off");
+  Serial.print(", sensor: ");
+  Serial.print(light_intensity_tv);
   Serial.print("\n");
 #endif
-  delay(1000);
+  delay(SLEEP_TIME);
 }
