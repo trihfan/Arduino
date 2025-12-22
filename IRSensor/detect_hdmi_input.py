@@ -2,10 +2,16 @@ import requests
 import RPi.GPIO as GPIO
 import time
 
+THRESHOLD = 50
 GPIO_PIN = 17
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(GPIO_PIN, GPIO.OUT)
+
+current_state = False
+wanted_state = False
+start_changed = 0
+MIN_DELAY = 3
 
 while True:
     try:
@@ -14,11 +20,21 @@ while True:
         red = data["info"].get("red", 0)
         green = data["info"].get("green", 0)
         blue = data["info"].get("blue", 0)
-        has_input = (red + green + blue) > 0
+        total = red + green + blue
+        has_input = (red + green + blue) > THRESHOLD
+        print(f"received {total}, threshold is {THRESHOLD}")
 
-        GPIO.output(GPIO_PIN, GPIO.HIGH if has_input else GPIO.LOW)
+        if (has_input != wanted_state):
+            start_changed = time.time()
+            wanted_state = has_input
+
+        print(f"current_state {current_state}, wanted_state {wanted_state}")
+
+        if (wanted_state != current_state and (time.time() - start_changed) > MIN_DELAY):
+            current_state = wanted_state
+            GPIO.output(GPIO_PIN, GPIO.HIGH if current_state else GPIO.LOW)
 
     except:
         GPIO.output(GPIO_PIN, GPIO.LOW)
 
-    time.sleep(1)
+    time.sleep(0.5)

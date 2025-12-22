@@ -8,8 +8,8 @@
 #define SLEEP_TIME 1000
 
 // Input
-#define INPUT_FROM_SERIAL 1
-#define INPUT_FROM_PI 0
+//#define INPUT_FROM_SERIAL
+#define INPUT_FROM_PI
 
 const int pin_input_pi = 2; // Pin used to receive state from Pi
 bool input_is_on = false;
