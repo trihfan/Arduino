@@ -34,6 +34,10 @@ while True:
         if (wanted_state != current_state and (wanted_state or (time.time() - start_changed) > MIN_DELAY)):
             current_state = wanted_state
             GPIO.output(GPIO_PIN, GPIO.HIGH if current_state else GPIO.LOW)
+            if (wanted_state):
+                requests.get("http://localhost:8090/json-rpc?request=%7B%22command%22:%22componentstate%22,%22componentstate%22:%7B%22component%22:%22LEDDEVICE%22,%22state%22:true%7D%7D")
+            else:
+                requests.get("http://localhost.43:8090/json-rpc?request=%7B%22command%22:%22componentstate%22,%22componentstate%22:%7B%22component%22:%22LEDDEVICE%22,%22state%22:false%7D%7D")
 
     except:
         GPIO.output(GPIO_PIN, GPIO.LOW)

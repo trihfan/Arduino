@@ -17,7 +17,7 @@ bool input_is_on = false;
 // Home cinema sony
 #define HOME_CINEMA_KEY_POWER 21516
 #define HOME_CINEMA_LIGHT_THRESHOLD 2
-#define HOME_CINEMA_POWER_DELAY 8000
+#define HOME_CINEMA_POWER_DELAY 500
 
 LightDependentResistor photocell_home_cinema(A0, 3000, LightDependentResistor::GL5528);
 IRsendSony sender_home_cinema;
@@ -109,7 +109,7 @@ void loop()
   // Update tv power state
   if (input_is_on != tv_is_on && !code_sent && (tv_busy_until < time))
   {
-    if (!is_waiting_for_false_on)
+    if (!is_waiting_for_false_on && !input_is_on)
     {
       is_waiting_for_false_on = true;
       tv_changed_at = time;
