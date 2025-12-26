@@ -35,10 +35,10 @@ while True:
             current_state = wanted_state
             GPIO.output(GPIO_PIN, GPIO.HIGH if current_state else GPIO.LOW)
             if (wanted_state):
-                requests.get("http://localhost:8090/json-rpc?request=%7B%22command%22:%22componentstate%22,%22componentstate%22:%7B%22component%22:%22LEDDEVICE%22,%22state%22:true%7D%7D")
+                r = requests.get("http://localhost:8090/json-rpc?request=%7B%22command%22:%22componentstate%22,%22componentstate%22:%7B%22component%22:%22LEDDEVICE%22,%22state%22:true%7D%7D")
                 print(r.get())
             else:
-                requests.get("http://localhost.43:8090/json-rpc?request=%7B%22command%22:%22componentstate%22,%22componentstate%22:%7B%22component%22:%22LEDDEVICE%22,%22state%22:false%7D%7D")
+                r = requests.get("http://localhost.43:8090/json-rpc?request=%7B%22command%22:%22componentstate%22,%22componentstate%22:%7B%22component%22:%22LEDDEVICE%22,%22state%22:false%7D%7D")
                 print(r.get())
 
     except:
