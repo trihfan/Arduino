@@ -30,7 +30,8 @@ while True:
 
         print(f"current_state {current_state}, wanted_state {wanted_state}")
 
-        if (wanted_state != current_state and (time.time() - start_changed) > MIN_DELAY):
+        # Turn on instantaneously but off could be a false positive
+        if (wanted_state != current_state and (wanted_state or (time.time() - start_changed) > MIN_DELAY)):
             current_state = wanted_state
             GPIO.output(GPIO_PIN, GPIO.HIGH if current_state else GPIO.LOW)
 
