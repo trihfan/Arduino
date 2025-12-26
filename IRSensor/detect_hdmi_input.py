@@ -19,7 +19,7 @@ while True:
         r1 = requests.get("http://localhost:8090/json-rpc?request=%7B%22command%22:%22current-state%22,%22subcommand%22:%22average-color%22,%22instance%22:1%7D", timeout=1)
 
         data0 = r0.json()
-        data1 = r0.json()
+        data1 = r1.json()
 
         total0 = data0["info"].get("red", 0) + data0["info"].get("green", 0) + data0["info"].get("blue", 0)
         total1 = data1["info"].get("red", 0) + data1["info"].get("green", 0) + data1["info"].get("blue", 0)
