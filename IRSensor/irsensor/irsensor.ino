@@ -5,7 +5,7 @@
 
 // Params
 #define ENABLE_SERIAL 1
-#define SLEEP_TIME 1000
+#define SLEEP_TIME 500
 
 // Input
 //#define INPUT_FROM_SERIAL
@@ -17,7 +17,7 @@ bool input_is_on = false;
 // Home cinema sony
 #define HOME_CINEMA_KEY_POWER 21516
 #define HOME_CINEMA_LIGHT_THRESHOLD 4
-#define HOME_CINEMA_POWER_DELAY 2000
+#define HOME_CINEMA_POWER_DELAY 8000
 
 LightDependentResistor photocell_home_cinema(A0, 3000, LightDependentResistor::GL5528);
 IRsendSony sender_home_cinema;
@@ -36,9 +36,9 @@ uint16_t tv_raw_data[TV_RAW_DATA_LEN] =
 	450, 2050, 450, 1000, 500, 2000, 450, 1000, 
 	500, 2000, 500, 1000
 };
-#define TV_LIGHT_THRESHOLD 50
-#define TV_POWER_ON_DELAY 2000
-#define TV_POWER_OFF_DELAY 5000
+#define TV_LIGHT_THRESHOLD 10
+#define TV_POWER_ON_DELAY 10000
+#define TV_POWER_OFF_DELAY 15000
 
 LightDependentResistor photocell_tv(A1, 3000, LightDependentResistor::GL5528);
 IRsendRaw sender_tv;
