@@ -11,7 +11,9 @@ GPIO.setup(GPIO_PIN, GPIO.OUT)
 current_state = False
 wanted_state = False
 start_changed = 0
-MIN_DELAY = 10
+MIN_DELAY = 20
+
+GPIO.output(GPIO_PIN, GPIO.LOW)
 
 while True:
     try:
@@ -27,7 +29,7 @@ while True:
         total_ambilight_led_color = data_ambilight_led_color["info"].get("red", 0) + data_ambilight_led_color["info"].get("green", 0) + data_ambilight_led_color["info"].get("blue", 0)
         total_virtual_led_color = data_virtual_led_color["info"].get("red", 0) + data_virtual_led_color["info"].get("green", 0) + data_virtual_led_color["info"].get("blue", 0)
 
-        has_input_virtual_led_color = total_virtual_led_color > THRESHOLD
+        has_input_virtual_led_color = total_virtual_led_color != THRESHOLD
         
         print(f"received {total_virtual_led_color}, threshold is {THRESHOLD}")
 

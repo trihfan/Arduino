@@ -17,7 +17,7 @@ bool input_is_on = false;
 // Home cinema sony
 #define HOME_CINEMA_KEY_POWER 21516
 #define HOME_CINEMA_LIGHT_THRESHOLD 2
-#define HOME_CINEMA_POWER_DELAY 500
+#define HOME_CINEMA_POWER_DELAY 3000
 
 LightDependentResistor photocell_home_cinema(A0, 3000, LightDependentResistor::GL5528);
 IRsendSony sender_home_cinema;
@@ -36,10 +36,10 @@ uint16_t tv_raw_data[TV_RAW_DATA_LEN] =
 	450, 2050, 450, 1000, 500, 2000, 450, 1000, 
 	500, 2000, 500, 1000
 };
-#define TV_LIGHT_THRESHOLD 40
+#define TV_LIGHT_THRESHOLD 30
 #define TV_POWER_ON_DELAY 10000
-#define TV_POWER_OFF_DELAY 15000
-#define TV_FALSE_ON_DELAY 10000
+#define TV_POWER_OFF_DELAY 20000
+#define TV_FALSE_ON_DELAY 20000
 
 LightDependentResistor photocell_tv(A1, 3000, LightDependentResistor::GL5528);
 IRsendRaw sender_tv;
@@ -48,6 +48,8 @@ unsigned long tv_busy_until = 0;
 
 bool is_waiting_for_false_on = false;
 unsigned long tv_changed_at = 0;
+
+void do_tv();
 
 void setup() 
 {
@@ -104,30 +106,17 @@ void loop()
   // 3 - Handle tv
   // Get Sony power state with photocell
   float light_intensity_tv = photocell_tv.getCurrentLux();
-  tv_is_on = light_intensity_tv > TV_LIGHT_THRESHOLD;
+  bool tv_is_on_now = light_intensity_tv > TV_LIGHT_THRESHOLD;
 
-  // Update tv power state
-  if (input_is_on != tv_is_on && !code_sent && (tv_busy_until < time))
+  if (tv_is_on_now && !tv_is_on)
   {
-    if (!is_waiting_for_false_on && !input_is_on)
-    {
-      is_waiting_for_false_on = true;
-      tv_changed_at = time;
-    }
-
-    if (time > (tv_changed_at + TV_FALSE_ON_DELAY))
-    {
-      sender_tv.send(tv_raw_data, TV_RAW_DATA_LEN, 36);
-      tv_busy_until = time + (tv_is_on ? TV_POWER_OFF_DELAY : TV_POWER_ON_DELAY);
-      is_waiting_for_false_on = false;
-#ifdef ENABLE_SERIAL
-      Serial.print("tv power on sent\n");
-#endif
-    }
+    tv_changed_at = millis();
   }
-  if (is_waiting_for_false_on && input_is_on == tv_is_on && time > (tv_changed_at + TV_FALSE_ON_DELAY))
+  tv_is_on = tv_is_on_now;
+
+  if (!code_sent)
   {
-    is_waiting_for_false_on = false;
+    do_tv();
   }
 
   // 4 - Sleep
@@ -148,4 +137,44 @@ void loop()
   Serial.print("\n");
 #endif
   delay(SLEEP_TIME);
+}
+
+void do_tv()
+{
+  unsigned long time = millis();
+  
+  if (tv_busy_until >= time) 
+  {
+    return;
+  }
+
+  bool send_tv_signal = false;
+
+  if (input_is_on)
+  {
+    if (!tv_is_on)
+    {
+      send_tv_signal = true;
+      tv_busy_until = time + TV_POWER_ON_DELAY;
+    }
+  }
+  else
+  {
+    if (tv_is_on)
+    {
+      if (time > (tv_changed_at + TV_FALSE_ON_DELAY))
+      {
+        send_tv_signal = true;
+        tv_busy_until = time + TV_POWER_OFF_DELAY;
+      }
+    }
+  }
+
+  if (send_tv_signal)
+  {
+    sender_tv.send(tv_raw_data, TV_RAW_DATA_LEN, 36);
+#ifdef ENABLE_SERIAL
+      Serial.print("tv power on sent\n");
+#endif
+  }
 }
