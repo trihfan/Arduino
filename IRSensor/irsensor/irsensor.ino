@@ -66,19 +66,19 @@ void setup()
 void loop() 
 {
   time = millis();
+  code_sent = false;
 
   // 1 - Read input
   input_is_on = digitalRead(pin_input_pi) > 0;
 
-  // 2 - Handle home cinema
-  do_home_cinema();
-
-  // 3 - Handle tv
+  // 2 - Handle tv
+  do_tv();
+  
+  // 3 - Handle home cinema
   if (!code_sent)
   {
-    do_tv();
+    do_home_cinema();
   }
-
   // 4 - Output and sleep
 #ifdef ENABLE_SERIAL
   // Output state
@@ -107,6 +107,7 @@ void do_tv()
   if (input_is_on != tv_is_on && tv_busy_until < time)
   {
     tv_busy_until = time + TV_POWER_DELAY;
+    code_sent = true;
     sender_tv.send(tv_raw_data, TV_RAW_DATA_LEN, 36);
 #ifdef ENABLE_SERIAL
     Serial.print("tv power on sent\n");
@@ -116,8 +117,6 @@ void do_tv()
 
 void do_home_cinema()
 {
-  code_sent = false;
-
   // Get home cinema power state with photocell
   light_intensity_home_cinema = photocell_home_cinema.getCurrentLux();
   home_cinema_is_on = light_intensity_home_cinema > HOME_CINEMA_LIGHT_THRESHOLD;
@@ -125,9 +124,9 @@ void do_home_cinema()
   // Update home cinema power state
   if (input_is_on != home_cinema_is_on && home_cinema_busy_until < time)
   {
-    sender_home_cinema.send(HOME_CINEMA_KEY_POWER, 15);
     home_cinema_busy_until = time + HOME_CINEMA_POWER_DELAY;
     code_sent = true;
+    sender_home_cinema.send(HOME_CINEMA_KEY_POWER, 15);
 #ifdef ENABLE_SERIAL
     Serial.print("home cinema power on sent\n");
 #endif
