@@ -13,11 +13,11 @@ while True:
     try:
         request = requests.get("http://localhost:8090/json-rpc?request=%7B%22command%22:%22serverinfo%22%7D")
         data = request.json()
-        print(data["info"]["priorities"])
 
         for priority in data["info"]["priorities"]:
             if priority["componentId"] == "VIDEOGRABBER":
                 active = priority.get("active", False)
+                print(f"state is {active}")
                 GPIO.output(GPIO_PIN, GPIO.HIGH if active else GPIO.LOW)
                 break
 
