@@ -39,7 +39,7 @@ uint16_t tv_raw_data[TV_RAW_DATA_LEN] =
 };
 #define TV_LIGHT_THRESHOLD 10
 #define TV_POWER_ON_DELAY 10000
-#define TV_POWER_OFF_DELAY 20000
+#define TV_POWER_OFF_DELAY 10000
 #define TV_FALSE_ON_DELAY 20000
 
 LightDependentResistor photocell_tv(A1, 3000, LightDependentResistor::GL5528);
@@ -52,12 +52,6 @@ unsigned long tv_turn_on_at = 0;
 // Functions
 void do_tv();
 void do_home_cinema();
-
-
-const int cecPin = 7; // Broche connectée au CEC
-unsigned long lastChange = 0;
-bool lastState = HIGH;
-
 
 void setup() 
 {

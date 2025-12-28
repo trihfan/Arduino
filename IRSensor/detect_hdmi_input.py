@@ -19,15 +19,15 @@ while True:
                 active = priority.get("active", False)
                 print(f"state is {active}")
                 GPIO.output(GPIO_PIN, GPIO.HIGH if active else GPIO.LOW)
-                break
 
-        # Turn led on or off
-        #if (total_ambilight_led_color == 0 and current_state):
-        #    requests.get("http://localhost:8090/json-rpc?request=%7B%22command%22:%22componentstate%22,%22componentstate%22:%7B%22component%22:%22LEDDEVICE%22,%22state%22:true%7D%7D")
-        #if (total_ambilight_led_color > 0 and not current_state):
-        #    requests.get("http://localhost:8090/json-rpc?request=%7B%22command%22:%22componentstate%22,%22componentstate%22:%7B%22component%22:%22LEDDEVICE%22,%22state%22:false%7D%7D")
+                # Turn led on or off
+                if active:
+                    requests.get("http://localhost:8090/json-rpc?request=%7B%22command%22:%22componentstate%22,%22componentstate%22:%7B%22component%22:%22LEDDEVICE%22,%22state%22:true%7D%7D")
+                else:
+                    requests.get("http://localhost:8090/json-rpc?request=%7B%22command%22:%22componentstate%22,%22componentstate%22:%7B%22component%22:%22LEDDEVICE%22,%22state%22:false%7D%7D")
+                break
 
     except:
         GPIO.output(GPIO_PIN, GPIO.LOW)
 
-    time.sleep(0.2)
+    time.sleep(1)
