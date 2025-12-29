@@ -11,7 +11,7 @@ GPIO.setup(GPIO_PIN, GPIO.OUT)
 current_state = False
 wanted_state = False
 start_changed = 0
-MIN_DELAY = 0
+MIN_DELAY = 3
 
 while True:
     try:
