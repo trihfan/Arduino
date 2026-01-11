@@ -1,6 +1,7 @@
 import requests
 import RPi.GPIO as GPIO
 import time
+from datetime import datetime
 
 GPIO_PIN = 17
 
@@ -13,6 +14,9 @@ wanted_state = False
 start_changed = 0
 MIN_DELAY = 5
 
+
+print(f"[{datetime.now()}] Sensor start")
+
 while True:
     try:
         request = requests.get("http://localhost:8090/json-rpc?request=%7B%22command%22:%22serverinfo%22%7D")
@@ -21,7 +25,7 @@ while True:
         for priority in data["info"]["priorities"]:
             if priority["componentId"] == "VIDEOGRABBER":
                 active = priority.get("active", False)
-                print(f"state is {active}")
+                print(f"[{datetime.now()}] video is {active}")
 
                 if (active != wanted_state):
                     start_changed = time.time()
@@ -31,6 +35,8 @@ while True:
 
                 # Turn on instantaneously but off could be a false positive
                 if (wanted_state != current_state and (wanted_state or can_change)):
+                    print(f"[{datetime.now()}] state change to {wanted_state}")
+
                     current_state = wanted_state
                     GPIO.output(GPIO_PIN, GPIO.HIGH if current_state else GPIO.LOW)
 
