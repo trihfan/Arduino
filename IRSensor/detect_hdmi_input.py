@@ -17,7 +17,7 @@ MIN_DELAY = 5
 
 
 with open(sys.argv[1], 'a') as log:
-    log.write(f"[{datetime.now()}] Sensor start")
+    log.write(f"[{datetime.now()}] Sensor start\n")
 
 
 while True:
@@ -30,7 +30,7 @@ while True:
                 active = priority.get("active", False)
                 
                 with open(sys.argv[1], 'a') as log:
-                    log.write(f"[{datetime.now()}] video is {active}")
+                    log.write(f"[{datetime.now()}] video is {active}\n")
 
                 if (active != wanted_state):
                     start_changed = time.time()
@@ -41,7 +41,7 @@ while True:
                 # Turn on instantaneously but off could be a false positive
                 if (wanted_state != current_state and (wanted_state or can_change)):
                     with open(sys.argv[1], 'a') as log:
-                        log.write(f"[{datetime.now()}] state change to {wanted_state}")
+                        log.write(f"[{datetime.now()}] state change to {wanted_state}\n")
 
                     current_state = wanted_state
                     GPIO.output(GPIO_PIN, GPIO.HIGH if current_state else GPIO.LOW)
