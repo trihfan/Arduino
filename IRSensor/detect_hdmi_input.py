@@ -1,6 +1,7 @@
 import requests
 import RPi.GPIO as GPIO
 import time
+import sys
 from datetime import datetime
 
 GPIO_PIN = 17
@@ -15,7 +16,9 @@ start_changed = 0
 MIN_DELAY = 5
 
 
-print(f"[{datetime.now()}] Sensor start")
+with open(sys.argv[1], 'a') as log:
+    log.write(f"[{datetime.now()}] Sensor start")
+
 
 while True:
     try:
@@ -25,7 +28,9 @@ while True:
         for priority in data["info"]["priorities"]:
             if priority["componentId"] == "VIDEOGRABBER":
                 active = priority.get("active", False)
-                print(f"[{datetime.now()}] video is {active}")
+                
+                with open(sys.argv[1], 'a') as log:
+                    log.write(f"[{datetime.now()}] video is {active}")
 
                 if (active != wanted_state):
                     start_changed = time.time()
@@ -35,7 +40,8 @@ while True:
 
                 # Turn on instantaneously but off could be a false positive
                 if (wanted_state != current_state and (wanted_state or can_change)):
-                    print(f"[{datetime.now()}] state change to {wanted_state}")
+                    with open(sys.argv[1], 'a') as log:
+                        log.write(f"[{datetime.now()}] state change to {wanted_state}")
 
                     current_state = wanted_state
                     GPIO.output(GPIO_PIN, GPIO.HIGH if current_state else GPIO.LOW)
